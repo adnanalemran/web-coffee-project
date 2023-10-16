@@ -1,48 +1,46 @@
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { AuthContext } from "../provider/AuthProvider";
 
-const SignUp = () => {
-  const { createUser } = useContext(AuthContext);
-  const handleSign = (e) => {
+function SignInPage() {
+  const { signInUser } = useContext(AuthContext); // Use useContext within the function
+
+  const handleSign = async (e) => {
     e.preventDefault();
+    console.log("Clicked Sign Up Button");
     const form = e.target;
     const email = form.email.value;
     const password = form.password.value;
     console.log(email, password);
 
-    //firebase create user  
-    createUser(email, password)
-      .then((result) => {
-        console.log(result.user);
-        //new user has been created
-
-        const createAt = result.user?.metadata?.creationTime;
-
-        const user = { email,createAt};
-        fetch("http://localhost:5000/user", {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-          },
-          body: JSON.stringify(user),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.insertedId) {
-              alert("user db added");
-            }
-          });
+    try {
+      const result = await signInUser(email, password);
+      const user = {
+        email,
+        lastLoggedAt: result.user?.metadata?.lastSignInTime,
+      };
+      fetch("http://localhost:5000/user", {
+        method: "PATCH",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(user),
       })
-      .catch((error) => {
-        console.log(error);
-      });
+      .then((res) => res.json(user))
+      .then((data=>{
+        console.log(data);
+      }))
+      console.log(result.user);
+    } catch (error) {
+      console.log(error);
+    }
   };
+
   return (
     <div>
       <div className="hero min-h-screen bg-base-200">
         <div className="hero-content flex-col lg:flex-row-reverse">
-          <div className="text-center lg:text-left ">
-            <h1 className="text-5xl font-bold p-4 ">Sign Up Now </h1>
+          <div className="text-center lg:text-left">
+            <h1 className="text-5xl font-bold p-4">Welcome to Our Platform</h1>
           </div>
           <div className="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
             <form className="card-body" onSubmit={handleSign}>
@@ -52,7 +50,7 @@ const SignUp = () => {
                 </label>
                 <input
                   type="email"
-                  placeholder="email"
+                  placeholder="Enter your email"
                   name="email"
                   className="input input-bordered"
                   required
@@ -64,7 +62,7 @@ const SignUp = () => {
                 </label>
                 <input
                   type="password"
-                  placeholder="password"
+                  placeholder="Enter your password"
                   name="password"
                   className="input input-bordered"
                   required
@@ -76,7 +74,7 @@ const SignUp = () => {
                 </label>
               </div>
               <div className="form-control mt-6">
-                <button className="btn btn-primary">Sign up</button>
+                <button className="btn btn-primary">Sign In</button>
               </div>
             </form>
           </div>
@@ -84,6 +82,6 @@ const SignUp = () => {
       </div>
     </div>
   );
-};
+}
 
-export default SignUp;
+export default SignInPage;
